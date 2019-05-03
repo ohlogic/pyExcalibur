@@ -43,6 +43,8 @@ class Browser:
     newtab = []
     closetab = []
     etcbutton = []
+    jsbutton = []
+    websettings = []
     historybutton = []
     hbox = []
     vbox = []
@@ -138,15 +140,14 @@ class Browser:
     def addtab(self, widget=None, dummy=None, dummier=None, dummiest=None, openurl="http://google.com/"):
         self.web_view.append(webkit.WebView())
         
-       
-        settings = webkit.WebSettings()
+        self.websettings.append(webkit.WebSettings())
         # to set user agent, uncomment
-        #settings.set_property('user-agent', 'iPad') 
-        self.web_view[len(self.web_view)-1].set_settings(settings)	
+        #self.websettings[len(self.websettings)-1].set_property('user-agent', 'iPad')  
+        # to enable, disable javascript
+        self.websettings[len(self.websettings)-1].set_property('enable-scripts', False)
+        self.web_view[len(self.web_view)-1].set_settings(self.websettings[len(self.websettings)-1])
 
-        
         self.web_view[len(self.web_view)-1].open(openurl)
-        
         
         self.back_button.append(gtk.ToolButton(gtk.STOCK_GO_BACK))
         self.back_button[len(self.back_button)-1].connect("clicked", self.go_back)
@@ -160,6 +161,12 @@ class Browser:
         self.url_bar.append(gtk.Entry())
         self.url_bar[len(self.url_bar)-1].connect("activate", self.on_active)
 
+        # enable (green), disable (red) javascript
+        self.jsbutton.append(gtk.Button('js'))
+        self.jsbutton[len(self.jsbutton)-1].connect("activate", self.toggle_js)
+        self.jsbutton[len(self.jsbutton)-1].connect("clicked", self.toggle_js)
+        self.jsbutton[len(self.jsbutton)-1].modify_bg(gtk.StateType.NORMAL, Gdk.color_parse("red")) 
+        
         self.etcbutton.append(gtk.Button('Prefs'))
         self.historybutton.append(gtk.Button('Hist'))
         self.historybutton[len(self.historybutton)-1].connect("activate", self.historytab)
@@ -190,6 +197,9 @@ class Browser:
         self.hbox[len(self.hbox)-1].pack_start(self.newtab[len(self.newtab)-1], False, True, 3)
         self.hbox[len(self.hbox)-1].pack_start(self.closetab[len(self.closetab)-1], False, True, 0)
         self.hbox[len(self.hbox)-1].pack_start(self.url_bar[len(self.url_bar)-1], True, True, 3)
+        
+        self.hbox[len(self.hbox)-1].pack_start(self.jsbutton[len(self.jsbutton)-1], False, True, 0)
+        
         self.hbox[len(self.hbox)-1].pack_start(self.historybutton[len(self.historybutton)-1], False, True, 0)
         self.hbox[len(self.hbox)-1].pack_start(self.etcbutton[len(self.etcbutton)-1], False, True, 0)
         self.vbox[len(self.vbox)-1].pack_start(self.hbox[len(self.hbox)-1], False, True, 0)
@@ -317,8 +327,6 @@ class Browser:
         else:
             if self.tabbook.get_tab_label_text(self.tabbook.get_nth_page(n)) == "History":
                 self.window.set_title("History - pyExcalibur Web")
-
-
     def removetab(self, widget=None, dummy=None, dummier=None, dummiest=None):
         if self.tabbook.get_current_page()-self.n >= 0:
             self.web_view.pop(self.tabbook.get_current_page()-self.n)
@@ -331,6 +339,8 @@ class Browser:
             self.scroll_window.pop(self.tabbook.get_current_page()-self.n)
             self.hbox.pop(self.tabbook.get_current_page()-self.n)
             self.vbox.pop(self.tabbook.get_current_page()-self.n)
+            
+            self.jsbutton.pop(self.tabbook.get_current_page()-self.n)
         else:
             self.n = self.n - 1
         self.tabbook.remove_page(self.tabbook.get_current_page())
@@ -352,7 +362,15 @@ class Browser:
 
     def select_all_url(self, kbdgroup, window, key, mod):
         self.url_bar[self.tabbook.get_current_page()-self.n].grab_focus()
-
+  
+    def toggle_js(self, widget):
+        if self.websettings[self.tabbook.get_current_page()-self.n].get_property('enable-scripts') == False:
+            self.websettings[self.tabbook.get_current_page()-self.n].set_property('enable-scripts', True)
+            self.jsbutton[self.tabbook.get_current_page()-self.n].modify_bg(gtk.StateType.NORMAL, Gdk.color_parse("green"))         
+        else:
+            self.websettings[self.tabbook.get_current_page()-self.n].set_property('enable-scripts', False)
+            self.jsbutton[self.tabbook.get_current_page()-self.n].modify_bg(gtk.StateType.NORMAL, Gdk.color_parse("red")) 
+            
     def historytab(self, something=None, other=None, somethingelse=None, lol=None):
         self.historysearch = gtk.Entry()
         histclosebutton = gtk.Button('X')
