@@ -52,7 +52,8 @@ class Browser:
     history = []
     n = 0
     change_title = 0
-
+    is_fullscreen = False
+        
     def delete_event(self, widget, event, data=None):
         return False
 
@@ -88,6 +89,7 @@ class Browser:
         self.window = gtk.Window(gtk.WindowType.TOPLEVEL)
         self.window.set_resizable(True)
         self.window.set_title("pyExcalibur Web")
+        self.window.connect("key-press-event", self.on_key_press)
         self.window.connect("delete_event", self.delete_event)
         self.window.connect("destroy", self.destroy)
         self.window.set_default_size(1000,600)
@@ -139,12 +141,14 @@ class Browser:
 
     def addtab(self, widget=None, dummy=None, dummier=None, dummiest=None, openurl="http://google.com/"):
         self.web_view.append(webkit.WebView())
-        
         self.websettings.append(webkit.WebSettings())
         # to set user agent, uncomment
         #self.websettings[len(self.websettings)-1].set_property('user-agent', 'iPad')  
         # to enable, disable javascript
         self.websettings[len(self.websettings)-1].set_property('enable-scripts', False)
+        # to enable, disable webgl
+        self.websettings[len(self.websettings)-1].set_property("enable-webgl", True)
+        
         self.web_view[len(self.web_view)-1].set_settings(self.websettings[len(self.websettings)-1])
 
         self.web_view[len(self.web_view)-1].open(openurl)
@@ -362,7 +366,79 @@ class Browser:
 
     def select_all_url(self, kbdgroup, window, key, mod):
         self.url_bar[self.tabbook.get_current_page()-self.n].grab_focus()
-  
+
+    def toggle_fullscreen(self):
+        if self.is_fullscreen:
+            self.window.unfullscreen()
+            self.is_fullscreen = False
+        else:
+            self.window.fullscreen()
+            self.is_fullscreen = True        
+        
+    def on_key_press(self, widget, event):
+        ctrl = (event.get_state() & Gdk.ModifierType.CONTROL_MASK)
+        
+        if event.keyval == Gdk.KEY_Escape:
+            gtk.main_quit()
+        elif event.keyval == Gdk.KEY_F11:
+            self.toggle_fullscreen()
+        elif event.keyval == Gdk.KEY_s and ctrl:
+            self.take_screenshot()
+        elif event.keyval == Gdk.KEY_p and ctrl:
+            self.export_to_pdf()
+        
+    def _get_view_image(self):
+        window = Gdk.Screen.get_active_window(Gdk.Screen.get_default())
+        x, y, width, height = window.get_geometry()
+        pixbuf = Gdk.pixbuf_get_from_window(window, 0, 0, width, height)
+        return pixbuf
+
+    def take_screenshot(self, path=None):
+        if path is None:
+            path = time.strftime("%m%d%y-%H%M%S.png")
+            
+        pixbuf = self._get_view_image()
+        pixbuf.savev(path, "png", [],[])
+
+    def export_to_pdf(self, path=None):
+        if path is None:
+            path = time.strftime("%m%d%y-%H%M%S.pdf")
+            
+        operation = gtk.PrintOperation()
+        operation.set_export_filename(path)
+        operation.connect("begin-print", self.__begin_print_cb)
+        operation.connect("draw-page", self.__draw_page_cb)
+        operation.run(gtk.PrintOperationAction.EXPORT, self.window)
+        
+    def __begin_print_cb(self, operation, context, data=None):
+        settings = operation.get_print_settings()
+        pixbuf = self._get_view_image()
+        rect = self.window.get_allocation()
+        paper_size = gtk.PaperSize.new_custom("custom", "custom",
+             pixel_to_mm(rect.width),
+             pixel_to_mm(rect.height), gtk.Unit.MM)
+        settings.set_paper_size(paper_size)
+        page_setup = gtk.PageSetup()
+        page_setup.set_top_margin(0, gtk.Unit.POINTS)
+        page_setup.set_bottom_margin(0, gtk.Unit.POINTS)
+        page_setup.set_left_margin(0, gtk.Unit.POINTS)
+        page_setup.set_right_margin(0, gtk.Unit.POINTS)
+
+        operation.set_default_page_setup(page_setup)
+        settings.set_orientation
+        operation.set_n_pages(1)
+
+    def __draw_page_cb(self, operation, context, page_nr):
+        cr = context.get_cairo_context()
+        layout = context.create_pango_layout()
+        pango_context = layout.get_context()
+        pixbuf = self._get_view_image()
+        #cr.set_source_pixbuf(pixbuf,0,0)
+        Gdk.cairo_set_source_pixbuf(cr, pixbuf, 0, 0)
+        cr.paint()
+        #cr.show_layout(layout)
+        #PangoCairo.show_layout(cr, layout)
+        
     def toggle_js(self, widget):
         if self.websettings[self.tabbook.get_current_page()-self.n].get_property('enable-scripts') == False:
             self.websettings[self.tabbook.get_current_page()-self.n].set_property('enable-scripts', True)
@@ -573,6 +649,10 @@ class Browser:
     def main(self):
         gtk.main()
 
+def pixel_to_mm(pixels, dpi=600):
+    # empirically obtained :P
+    return pixels / 2.9
+        
 if __name__ == "__main__":
     browser = Browser()
     browser.main()
