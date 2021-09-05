@@ -87,7 +87,7 @@ class Browser:
             prefsfile.close()
             for pref in tmppref:
                 self.preferences.append(pref.rstrip())
-        self.window = gtk.Window(gtk.WindowType.TOPLEVEL)
+        self.window = gtk.Window(type=gtk.WindowType.TOPLEVEL)
         self.window.set_resizable(True)
         self.window.set_title("pyExcalibur Web")
         self.window.connect("key-press-event", self.on_key_press)
@@ -154,47 +154,51 @@ class Browser:
         
         self.web_view[len(self.web_view)-1].load_uri(openurl)
         
-        self.back_button.append(gtk.ToolButton(gtk.STOCK_GO_BACK))
+        self.back_button.append(gtk.ToolButton(stock_id=gtk.STOCK_GO_BACK))
         self.back_button[len(self.back_button)-1].connect("clicked", self.go_back)
 
-        self.forward_button.append(gtk.ToolButton(gtk.STOCK_GO_FORWARD))
+        self.forward_button.append(gtk.ToolButton(stock_id=gtk.STOCK_GO_FORWARD))
         self.forward_button[len(self.forward_button)-1].connect("clicked", self.go_forward)
 
-        self.refresh_button.append(gtk.ToolButton(gtk.STOCK_REFRESH))
+        self.refresh_button.append(gtk.ToolButton(stock_id=gtk.STOCK_REFRESH))
         self.refresh_button[len(self.refresh_button)-1].connect("clicked", self.refresh)
 
         self.url_bar.append(gtk.Entry())
         self.url_bar[len(self.url_bar)-1].connect("activate", self.on_active)
 
         # enable (green), disable (red) javascript
-        self.jsbutton.append(gtk.Button('js'))
+        self.jsbutton.append(gtk.Button.new_with_label("js"))
         self.jsbutton[len(self.jsbutton)-1].connect("activate", self.toggle_js)
         self.jsbutton[len(self.jsbutton)-1].connect("clicked", self.toggle_js)
-        self.jsbutton[len(self.jsbutton)-1].modify_bg(gtk.StateType.NORMAL, Gdk.color_parse("red")) 
-        
-        self.etcbutton.append(gtk.Button('Prefs'))
-        self.historybutton.append(gtk.Button('Hist'))
+
+        #self.jsbutton[len(self.jsbutton)-1].modify_bg(gtk.StateType.NORMAL, Gdk.color_parse("red")) 
+        self.jsbutton[len(self.jsbutton)-1].set_name("name_entry")
+        provider = gtk.CssProvider()
+        provider.load_from_data(bytes('#name_entry { background: red; }'.encode() ))
+        self.jsbutton[len(self.jsbutton)-1].get_style_context().add_provider(provider, gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        self.etcbutton.append(gtk.Button.new_with_label("Prefs"))
+        self.historybutton.append(gtk.Button.new_with_label("Hist"))
         self.historybutton[len(self.historybutton)-1].connect("activate", self.historytab)
         self.historybutton[len(self.historybutton)-1].connect("clicked", self.historytab)
         self.etcbutton[len(self.etcbutton)-1].connect("activate", self.show_prefs)
         self.etcbutton[len(self.etcbutton)-1].connect("clicked", self.show_prefs)
-        self.newtab.append(gtk.Button('+'))
+        self.newtab.append(gtk.Button.new_with_label("+"))
         self.newtab[len(self.newtab)-1].connect("activate", self.addtab)
         self.newtab[len(self.newtab)-1].connect("clicked", self.addtab)
-        self.closetab.append(gtk.Button('X'))
+        self.closetab.append(gtk.Button.new_with_label("X"))
         self.closetab[len(self.closetab)-1].connect("activate", self.removetab)
         self.closetab[len(self.closetab)-1].connect("clicked", self.removetab)
 
         self.web_view[len(self.web_view)-1].connect("load_changed", self.on_load_changed)
         #self.web_view[len(self.web_view)-1].connect("download_requested", self.download)
 
-        self.scroll_window.append(gtk.ScrolledWindow(None, None))
+        self.scroll_window.append(gtk.ScrolledWindow(hadjustment=None, vadjustment=None))
         self.scroll_window[len(self.scroll_window)-1].add(self.web_view[len(self.web_view)-1])
         self.scroll_window[len(self.scroll_window)-1].set_policy(gtk.PolicyType.AUTOMATIC, gtk.PolicyType.AUTOMATIC)
 
-        self.hbox.append(gtk.HBox(False, 0))
-        self.vbox.append(gtk.VBox(False, 0))
-        self.mainbox = gtk.VBox(False, 0)
+        self.hbox.append(gtk.HBox(homogeneous=False, spacing=0))
+        self.vbox.append(gtk.VBox(homogeneous=False, spacing=0))
+        self.mainbox = gtk.VBox(homogeneous=False, spacing=0)
         self.hbox[len(self.hbox)-1].pack_start(self.back_button[len(self.back_button)-1], False, True, 0)
         self.hbox[len(self.hbox)-1].pack_start(self.forward_button[len(self.forward_button)-1], False, True, 0)
         self.hbox[len(self.hbox)-1].pack_start(self.refresh_button[len(self.refresh_button)-1], False, True, 0)
@@ -450,11 +454,20 @@ class Browser:
     def toggle_js(self, widget):
         if self.websettings[self.tabbook.get_current_page()-self.n].get_property('enable_javascript') == False:
             self.websettings[self.tabbook.get_current_page()-self.n].set_property('enable_javascript', True)
-            self.jsbutton[self.tabbook.get_current_page()-self.n].modify_bg(gtk.StateType.NORMAL, Gdk.color_parse("green"))         
+            self.jsbutton[self.tabbook.get_current_page()-self.n].set_name("name_entry2")
+            provider = gtk.CssProvider()
+            provider.load_from_data(bytes('#name_entry2 { background: green; }'.encode() ))
+            self.jsbutton[len(self.jsbutton)-1].get_style_context().add_provider(provider, gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
         else:
             self.websettings[self.tabbook.get_current_page()-self.n].set_property('enable_javascript', False)
-            self.jsbutton[self.tabbook.get_current_page()-self.n].modify_bg(gtk.StateType.NORMAL, Gdk.color_parse("red")) 
-            
+            self.jsbutton[self.tabbook.get_current_page()-self.n].set_name("name_entry3")
+            provider = gtk.CssProvider()
+            provider.load_from_data(bytes('#name_entry3 { background: red; }'.encode() ))
+            self.jsbutton[len(self.jsbutton)-1].get_style_context().add_provider(provider, gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+
+
     def historytab(self, something=None, other=None, somethingelse=None, lol=None):
         self.historysearch = gtk.Entry()
         histclosebutton = gtk.Button('X')
