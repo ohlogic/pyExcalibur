@@ -637,7 +637,7 @@ class Browser:
         self.prefwin.show_all()
             
     def write_prefs(self, first):
-        if first.get_label() == 'gtk-ok':
+        if first.get_label() == 'OK':
             self.preferences = []
             if self.bottombutton.get_active():
                self.preferences.append('4')
