@@ -221,7 +221,7 @@ class Browser:
         url = self.url_bar[self.tabbook.get_current_page()-self.n].get_text()
         try:
             url.index(" ")
-            url = "http://google.ca/search?q=" + url
+            url = "http://bestinternetsearch.com/search?q=" + url
         except:
             try:
                 url.index("mailto")
