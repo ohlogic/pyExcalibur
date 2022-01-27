@@ -1,7 +1,5 @@
 #!/usr/bin/python3
 #
-# Copyright 2011 Uiri Noyb
-# Copyright 2019 Stan S
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -76,7 +74,7 @@ class Browser:
             os.mkdir(os.path.expanduser("~/pyExcalibur"))
         if not os.path.exists(os.path.expanduser("~/pyExcalibur/prefs")):
             self.prefsfile = open(os.path.expanduser("~/pyExcalibur/prefs"), 'w')
-            self.prefsfile.write("1\nhttp://google.com/\n0\n1\n15\n")
+            self.prefsfile.write("1\nhttp://bestinternetsearch.com/\n0\n1\n15\n")
             self.prefsfile.close()
         if urlwhichshallbeopened != None:
             self.preferences = [None, None, None, None, None]
@@ -98,7 +96,7 @@ class Browser:
         self.tabbook.set_scrollable(True)
         self.tabbook.popup_enable()
         if self.preferences[1] == '0':
-            self.preferences[1] = "http://google.com/"
+            self.preferences[1] = "http://bestinternetsearch.com/"
         if self.preferences[0] == '1':
             self.tabbook.set_tab_pos(gtk.PositionType.LEFT)
         elif self.preferences[0] == '2':
@@ -125,7 +123,7 @@ class Browser:
         #    if self.preferences[3] != '1': 
         if not os.path.exists(os.path.expanduser("~/pyExcalibur/history")):
             self.historyfile = open(os.path.expanduser("~/pyExcalibur/history"), 'w')
-            self.historyfile.write("Google: http://www.google.com\n")
+            self.historyfile.write("BestInternetSearch: http://www.bestinternetsearch.com\n")
             self.historyfile.close()
         self.historyfile = open(os.path.expanduser("~/pyExcalibur/history"), 'r')
         self.historytemp = self.historyfile.readlines()
@@ -140,13 +138,13 @@ class Browser:
                     break
         self.historyfile.close()
 
-    def addtab(self, widget=None, dummy=None, dummier=None, dummiest=None, openurl="http://google.com/"):
+    def addtab(self, widget=None, dummy=None, dummier=None, dummiest=None, openurl="http://bestinternetsearch.com/"):
         self.web_view.append(WebKit2.WebView())
         self.websettings.append(WebKit2.Settings())
         # to set user agent, uncomment
         self.websettings[len(self.websettings)-1].set_property('user-agent', 'iPad') # won't set at all
         # to enable, disable javascript
-        self.websettings[len(self.websettings)-1].set_property('enable_javascript', False)
+        self.websettings[len(self.websettings)-1].set_property('enable_javascript', True)
         # to enable, disable webgl
         self.websettings[len(self.websettings)-1].set_property("enable-webgl", True)
         
@@ -174,7 +172,7 @@ class Browser:
         #self.jsbutton[len(self.jsbutton)-1].modify_bg(gtk.StateType.NORMAL, Gdk.color_parse("red")) 
         self.jsbutton[len(self.jsbutton)-1].set_name("name_entry")
         provider = gtk.CssProvider()
-        provider.load_from_data(bytes('#name_entry { background: red; }'.encode() ))
+        provider.load_from_data(bytes('#name_entry { background: green; }'.encode() ))
         self.jsbutton[len(self.jsbutton)-1].get_style_context().add_provider(provider, gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
         self.etcbutton.append(gtk.Button.new_with_label("Prefs"))
         self.historybutton.append(gtk.Button.new_with_label("Hist"))
@@ -470,14 +468,14 @@ class Browser:
 
     def historytab(self, something=None, other=None, somethingelse=None, lol=None):
         self.historysearch = gtk.Entry()
-        histclosebutton = gtk.Button('X')
+        histclosebutton = gtk.Button(label='X')
         histclosebutton.connect("activate", self.removetab)
         histclosebutton.connect("clicked", self.removetab)
         self.historysearch.connect("activate", self.search_history)
-        historysearchbutton = gtk.Button('Search')
+        historysearchbutton = gtk.Button(label='Search')
         historysearchbutton.connect("activate", self.search_history)
         historysearchbutton.connect("clicked", self.search_history)
-        historysearchbox = gtk.HBox(False, 0)
+        historysearchbox = gtk.HBox(homogeneous=False, spacing=0)
         historysearchbox.pack_start(self.historysearch, False, True, 0)
         historysearchbox.pack_start(historysearchbutton, False, True, 0)
         historysearchbox.pack_end(histclosebutton, False, True, 0)
@@ -485,17 +483,17 @@ class Browser:
         for item in self.history:
             uri = item[1].rstrip()
             self.historyliststore.append([item[0], uri])
-        self.historylistview = gtk.TreeView(self.historyliststore)
+        self.historylistview = gtk.TreeView(model=self.historyliststore)
         historylistcell = gtk.CellRendererText()
         historylistcell2 = gtk.CellRendererText()
         historylistcol = gtk.TreeViewColumn('Title', historylistcell, text=0)
         historylistcol2 = gtk.TreeViewColumn('URL', historylistcell2, text=1)
-        historylistscroll = gtk.ScrolledWindow(None, None)
+        historylistscroll = gtk.ScrolledWindow(hadjustment=None, vadjustment=None)
         historylistscroll.set_policy(gtk.PolicyType.NEVER, gtk.PolicyType.AUTOMATIC)
         historylistscroll.add(self.historylistview)
         self.historylistview.append_column(historylistcol)
         self.historylistview.append_column(historylistcol2)
-        self.historybox = gtk.VBox(False, 0)
+        self.historybox = gtk.VBox(homogeneous=False, spacing=0)
         self.historybox.pack_start(historysearchbox, False, True, 0)
         self.historybox.pack_start(historylistscroll, True, True, 0)
         self.tabbook.prepend_page(self.historybox)
@@ -568,33 +566,33 @@ class Browser:
         self.prefwin.set_title("pyExcalibur Preferences")
         self.prefwin.set_default_size(200, 200)
 
-        tabposbox = gtk.HBox(False, 0)
+        tabposbox = gtk.HBox(homogeneous=False, spacing=0)
         self.leftbutton = gtk.RadioButton.new_with_label_from_widget(None, label="Left")
         self.topbutton = gtk.RadioButton.new_with_label_from_widget(self.leftbutton, label="Top")
         self.rightbutton = gtk.RadioButton.new_with_label_from_widget(self.leftbutton, label="Right")
         self.bottombutton = gtk.RadioButton.new_with_label_from_widget(self.leftbutton, label="Bottom")
         
-        tabposlabel = gtk.Label("Tab Position:")
+        tabposlabel = gtk.Label(label="Tab Position:")
         tabposbox.pack_start(tabposlabel, False, False, 0)
         tabposbox.pack_start(self.leftbutton, False, False, 0)
         tabposbox.pack_start(self.topbutton, False, False, 0)
         tabposbox.pack_start(self.rightbutton, False, False, 0)
         tabposbox.pack_start(self.bottombutton, False, False, 0)
 
-        homebox = gtk.HBox(False, 0)
-        homelabel = gtk.Label("Homepage: ")
+        homebox = gtk.HBox(homogeneous=False, spacing=0)
+        homelabel = gtk.Label(label="Homepage: ")
         self.homeentry = gtk.Entry()
         homebox.pack_start(homelabel, False, True, 10)
         homebox.pack_start(self.homeentry, True, True, 10)
 
-        checkbox = gtk.HBox(False, 0)
-        self.rssbutton = gtk.CheckButton("Show RSS Tab", False)
-        self.histbutton = gtk.CheckButton("Record History", False)
+        checkbox = gtk.HBox(homogeneous=False, spacing=0)
+        self.rssbutton = gtk.CheckButton(label="Show RSS Tab", stock=False)
+        self.histbutton = gtk.CheckButton(label="Record History", stock=False)
         checkbox.pack_start(self.rssbutton, False, True, 0)
         checkbox.pack_start(self.histbutton, False, True, 0)
 
-        widthbox = gtk.HBox(False, 0)
-        widthlabel = gtk.Label("Tab width (in characters):")
+        widthbox = gtk.HBox(homogeneous=False, spacing=0)
+        widthlabel = gtk.Label(label="Tab width (in characters):")
         self.widthbutton = gtk.SpinButton()
         self.widthbutton.set_range(0, 99)
         self.widthbutton.set_value(15)
@@ -602,9 +600,9 @@ class Browser:
         widthbox.pack_start(widthlabel, False, True, 5)
         widthbox.pack_start(self.widthbutton, False, True, 5)
 
-        donebox = gtk.HBox(False, 0)
-        cancelbutton = gtk.Button(stock=gtk.STOCK_CANCEL)
-        okbutton = gtk.Button(stock=gtk.STOCK_OK)
+        donebox = gtk.HBox(homogeneous=False, spacing=0)
+        cancelbutton = gtk.Button(label="Cancel")
+        okbutton = gtk.Button(label="OK")
         donebox.pack_start(cancelbutton, True, False, 0)
         donebox.pack_start(okbutton, True, False, 0)
 
@@ -629,7 +627,7 @@ class Browser:
                 self.histbutton.set_active(True)
             self.widthbutton.set_value(float(self.preferences[4]))
         
-        prefbox = gtk.VBox(False, 0)
+        prefbox = gtk.VBox(homogeneous=False, spacing=0)
         prefbox.pack_start(tabposbox, False, True, 5)
         prefbox.pack_start(homebox, False, True, 5)
         prefbox.pack_start(checkbox, False, True, 5)
